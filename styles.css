@@ -5,3 +5,17 @@ canvas {
 	background: transparent;
 
 }
+
+#background {
+	z-index: -3;
+}
+
+#main {
+	z-index: -2;
+}
+#ship {
+	z-index: 1;
+}
+#ship {
+	z-index: 0;
+}

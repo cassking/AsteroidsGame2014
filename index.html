@@ -7,22 +7,31 @@
 	  <link rel="stylesheet" href="styles.css">
 
 </head>
-<body onload="init()">
+<body>
 
 	<!-- THE CANVAS FOR PANNING BACKGROUND-->
 	<canvas id="background" width="600" height="360"> 
 
 		Your browser does not support canvas. Please try again with a different browser.
-
-
-
-
-
 	</canvas>
+
+	<!--- the canvas for enemy ships and bullets -->
+
+	<canvas id="main" width="600" height="360" >
+	</canvas>
+
+	<canvas id="ship" width="600" height="360">
+	</canvas>
+
+<canvas id="pumpkin" width="600" height="360">
+	</canvas>
+
 	
 
 
 
-<script src="js.js"></script>
+<script src="space_shooter_one.js"></script>
+<!-- <script src="jsorig.js"></script>
+ -->
 </body>
 </html>

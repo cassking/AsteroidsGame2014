@@ -54,7 +54,7 @@ this.bullet.onload = function() {
 	//set images source
 
 	this.background.src = "imgs/bg.png";
-	this.spaceship.src = "imgs/spaceship2.png";
+	this.spaceship.src = "imgs/pumpkin.png";
 	this.pumpkin.src = "imgs/pumpkin.png";
 	this.bullet.src = "imgs/bullet.png";
 
@@ -132,185 +132,52 @@ Background.prototype = new Drawable();
 /*creates the Game object which will hold all objectws and data for
 /*the game */
 
-xxxxxxx
-function Game() {
-
-/* gets canvas information and context and sets up all game onjects
-/*returns TRUE if the canvas is supported and FALSE if it is not.
-/* this is to stop the animation script from constantly
-/* running on older browasers*/
 
 
-
-this.init = function() {
-	//get the canvas element
-	this.bgCanvas = document.getElementById('background');
-	this.shipCanvas = document.getElementById('ship');
-	//this.bgCanvas = document.getElementById('pumpkin');
-	this.mainCanvas = document.getElementById('main');
-	//test to see if canvas is supported
-	//only need to check one canvas
-	if (this.bgCanvas.getContext) {
-
-		this.bgContext = this.bgCanvas.getContext('2d');
-			this.shipContext = this.shipCanvas.getContext('2d');
-			this.mainContext = this.mainCanvas.getContext('2d');
-//this.pumpkin.Context = this.pumpkinCanvas.getContext('2d');
-		//initialize objects to contain their context and canvas informarion
-		Background.prototype.context = this.bgContext;
-			Background.prototype.canvasWidth = this.bgCanvas.width;
-			Background.prototype.canvasHeight = this.bgCanvas.height;
-			
-			Ship.prototype.context = this.shipContext;
-			Ship.prototype.canvasWidth = this.shipCanvas.width;
-			Ship.prototype.canvasHeight = this.shipCanvas.height;
-			
-				//Pumpkin.prototype.canvasHeight = this.shipCanvas.height;
-			//Pumpkin.prototype.context = this.shipContext;
-			//Pumpkin.prototype.canvasWidth = this.shipCanvas.width;
-
-
-			Bullet.prototype.context = this.mainContext;
-			Bullet.prototype.canvasWidth = this.mainCanvas.width;
-			Bullet.prototype.canvasHeight = this.mainCanvas.height;
-
-		//Inititialzie the background object
-		this.background = new Background();
-		this.background.init(0,0);//set draw point to 0, 0
-
-		//initialize the ship object
-		this.ship = new Ship();
-		//set the ship to start near bottom of canvas
-		var shipStartX = this.shipCanvas.width/2 - imageRepository.spaceship.width;
-			var shipStartY = this.shipCanvas.height/4*3 + imageRepository.spaceship.height*2;
-			this.ship.init(shipStartX, shipStartY, imageRepository.spaceship.width,
-			               imageRepository.spaceship.height);
-
-
-		return true;
-	} else {
-		return false;
-	}
-
+/**
+ * Creates the Bullet object which the ship fires. The bullets are
+ * drawn on the "main" canvas.
+ */
+function Bullet() {	
+	this.alive = false; // Is true if the bullet is currently in use
+	
+	/*
+	 * Sets the bullet values
+	 */
+	this.spawn = function(x, y, speed) {
+		this.x = x;
+		this.y = y;
+		this.speed = speed;
+		this.alive = true;
 	};
 
-	//start the ANIMATION LOOP
-	this.start = function() {
-		this.ship.draw();
-		animate();
-	};
-}
-
-/*THE ANIMATION LOOP
-/* calls the requestAnimationFrame shim to optimize
-/* the game loop and draws all game objects
-/* this fucntion must be GLOBAL anc cannot be withing an object
-*/
-function animate() {
-
-
-	requestAnimationFrame( animate );
-	game.background.draw();
-	game.ship.move();
-	game.ship.bulletPool.animate();
-}
-
-/*requestAnim shim layer by Paul Irish
-/*finds the first API that works to optimize the animaton loop,
-/* otherwise defautls to setTimeout()
-*/
-
-window.requestAnimationFrame = (function() {
-
-	return window.requestAnimationFrame   ||
-			window.webkitRequestAnimationFrame ||
-			window.mozRequestAnimationFrame    ||
-			window.oRequestAnimationFrame      ||
-			window.msRequestAnimationFrame     ||
-			function(/* function */ callback, /* DOMElement */ element){
-				window.setTimeout(callback, 1000 / 60);
-			};
-
-}) ();
-
-////////* PART TWO THE SHIPS AND BULLETS*/////////
-
-/*custom pool objects. holds bullet to be managed to prevent garbage collection*/
-
-function Pool(maxSize) {
-	var size = maxSize; //max bullets allowed in pool
-	var pool =[];
-	/*populates the pool array with BULLET OBJECTS*/
-	this.init = function() {
-			for ( var i = 0; i < size; i++) {
-	//initialize the bullet object
-	var bullet = new Bullet();
-	bullet.init(0,0, imageRepository.bullet.width,imageRepository.bullet.height);
-	pool[i] = bullet;
-	}
-
-
-	};
-	/*grabs the last itme in the list and initializes it and pushes it to front of array*/
-	this.get = function(x,y, speed) {
-		if(!pool[size -1].alive) {
-			pool[size -1].spawn(x,y,speed);
-			pool.unshift(pool.pop());
+	/*
+	 * Uses a "drity rectangle" to erase the bullet and moves it.
+	 * Returns true if the bullet moved off the screen, indicating that
+	 * the bullet is ready to be cleared by the pool, otherwise draws
+	 * the bullet.
+	 */
+	this.draw = function() {
+		this.context.clearRect(this.x, this.y, this.width, this.height);
+		this.y -= this.speed;
+		if (this.y <= 0 - this.height) {
+			return true;
+		}
+		else {
+			this.context.drawImage(imageRepository.bullet, this.x, this.y);
 		}
 	};
-
-/*used for the shitp to be able to get two bullets at once.
-/* if only the get() function is used twice, the ship is able to fire
-/* and only have 1 bullet spawn instead of 2*/
-this.getTwo = function(x1,y1,speed1,x2,y2,speed2) {
-	if(!pool[size -1].alive &&
-		!pool[size -2].alive) {
-		this.get(x1,y2,speed1);
-		this.get(x2,y2,speed2);
-	}
-};
-
-/*draws any in use Bullets. if a bullet goes off the screen
-/*clears it n pushes it to the front of array*/
-this.animate = function() {
-
-	for (var i = 0; i < size; i++) {
-		//only draw untile we find a bullet that is not alive
-		if (pool[i].alive) {
-			if(pool[i].draw()) {
-				pool[i].clear();
-				pool.push((pool.splice(i,1))[0]);
-			}
-		}
-		else
-			break;
-	}
+	
+	/*
+	 * Resets the bullet values
+	 */
+	this.clear = function() {
+		this.x = 0;
+		this.y = 0;
+		this.speed = 0;
+		this.alive = false;
+	};
 }
-
-
-//creates the bullet object fired by the ship
-/*and moves it. returns TRUE if the bullet moved off the screen, indicating
-/(*that the bullet is ready bto be cleared by the pool, otherwise, draws
-/* the bullet*/
-this.draw = function () {
-	this.context.clearRect(this.x, this.y, this.width, this.height);
-	this.y -= this.speed;
-	if (this.y <= 0 -this.height) {
-		return true;
-	}
-	else {
-		this.context.drawImage(imageRepository.bullet, this.x, this.y);
-	}
-};
-/* resets the bullet values*/
-this.clear = function() {
-	this.x = 0;
-	this.y =0;
-	this.speed =0;
-	this.alive = false;
-
-};
-
 Bullet.prototype = new Drawable();
 
 
@@ -436,12 +303,167 @@ document.onkeyup = function(e) {
 }
 
 
+
+
+
+
+
+function Game() {
+
+/* gets canvas information and context and sets up all game onjects
+/*returns TRUE if the canvas is supported and FALSE if it is not.
+/* this is to stop the animation script from constantly
+/* running on older browasers*/
+
+
+
+this.init = function() {
+	//get the canvas element
+	this.bgCanvas = document.getElementById('background');
+	this.shipCanvas = document.getElementById('ship');
+	//this.bgCanvas = document.getElementById('pumpkin');
+	this.mainCanvas = document.getElementById('main');
+	//test to see if canvas is supported
+	//only need to check one canvas
+	if (this.bgCanvas.getContext) {
+
+		this.bgContext = this.bgCanvas.getContext('2d');
+			this.shipContext = this.shipCanvas.getContext('2d');
+			this.mainContext = this.mainCanvas.getContext('2d');
+//this.pumpkin.Context = this.pumpkinCanvas.getContext('2d');
+		//initialize objects to contain their context and canvas informarion
+		Background.prototype.context = this.bgContext;
+			Background.prototype.canvasWidth = this.bgCanvas.width;
+			Background.prototype.canvasHeight = this.bgCanvas.height;
+			
+			Ship.prototype.context = this.shipContext;
+			Ship.prototype.canvasWidth = this.shipCanvas.width;
+			Ship.prototype.canvasHeight = this.shipCanvas.height;
+			
+				//Pumpkin.prototype.canvasHeight = this.shipCanvas.height;
+			//Pumpkin.prototype.context = this.shipContext;
+			//Pumpkin.prototype.canvasWidth = this.shipCanvas.width;
+
+
+			Bullet.prototype.context = this.mainContext;
+			Bullet.prototype.canvasWidth = this.mainCanvas.width;
+			Bullet.prototype.canvasHeight = this.mainCanvas.height;
+
+		//Inititialzie the background object
+		this.background = new Background();
+		this.background.init(0,0);//set draw point to 0, 0
+
+		//initialize the ship object
+		this.ship = new Ship();
+		//set the ship to start near bottom of canvas
+		var shipStartX = this.shipCanvas.width/2 - imageRepository.spaceship.width;
+			var shipStartY = this.shipCanvas.height/4*3 + imageRepository.spaceship.height*2;
+			this.ship.init(shipStartX, shipStartY, imageRepository.spaceship.width,
+			               imageRepository.spaceship.height);
+
+
+		return true;
+	} else {
+		return false;
+	}
+
+	};
+
+	//start the ANIMATION LOOP
+	this.start = function() {
+		this.ship.draw();
+		animate();
+	};
+}
+
+/*THE ANIMATION LOOP
+/* calls the requestAnimationFrame shim to optimize
+/* the game loop and draws all game objects
+/* this fucntion must be GLOBAL anc cannot be withing an object
+*/
+function animate() {
+
+
+	requestAnimationFrame( animate );
+	game.background.draw();
+	game.ship.move();
+	game.ship.bulletPool.animate();
 }
 
 
+////////* PART TWO THE SHIPS AND BULLETS*/////////
+
+/*custom pool objects. holds bullet to be managed to prevent garbage collection*/
+
+function Pool(maxSize) {
+	var size = maxSize; //max bullets allowed in pool
+	var pool =[];
+	/*populates the pool array with BULLET OBJECTS*/
+	this.init = function() {
+			for ( var i = 0; i < size; i++) {
+	//initialize the bullet object
+	var bullet = new Bullet();
+	bullet.init(0,0, imageRepository.bullet.width,imageRepository.bullet.height);
+	pool[i] = bullet;
+	}
 
 
+	};
+	/*grabs the last itme in the list and initializes it and pushes it to front of array*/
+	this.get = function(x,y, speed) {
+		if(!pool[size -1].alive) {
+			pool[size -1].spawn(x,y,speed);
+			pool.unshift(pool.pop());
+		}
+	};
 
+/*used for the shitp to be able to get two bullets at once.
+/* if only the get() function is used twice, the ship is able to fire
+/* and only have 1 bullet spawn instead of 2*/
+this.getTwo = function(x1,y1,speed1,x2,y2,speed2) {
+	if(!pool[size -1].alive &&
+		!pool[size -2].alive) {
+		this.get(x1,y2,speed1);
+		this.get(x2,y2,speed2);
+	}
+};
+
+/*draws any in use Bullets. if a bullet goes off the screen
+/*clears it n pushes it to the front of array*/
+this.animate = function() {
+
+	for (var i = 0; i < size; i++) {
+		//only draw untile we find a bullet that is not alive
+		if (pool[i].alive) {
+			if(pool[i].draw()) {
+				pool[i].clear();
+				pool.push((pool.splice(i,1))[0]);
+			}
+		}
+		else
+			break;
+	}
+}
+}
+
+
+/*requestAnim shim layer by Paul Irish
+/*finds the first API that works to optimize the animaton loop,
+/* otherwise defautls to setTimeout()
+*/
+
+window.requestAnimationFrame = (function() {
+
+	return window.requestAnimationFrame   ||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame    ||
+			window.oRequestAnimationFrame      ||
+			window.msRequestAnimationFrame     ||
+			function(/* function */ callback, /* DOMElement */ element){
+				window.setTimeout(callback, 1000 / 60);
+			};
+
+}) ();
 
 
 

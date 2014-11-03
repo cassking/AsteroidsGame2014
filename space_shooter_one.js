@@ -357,7 +357,7 @@ this.init = function() {
 		this.ship = new Ship();
 		//set the ship to start near bottom of canvas
 		var shipStartX = this.shipCanvas.width/2 - imageRepository.spaceship.width;
-			var shipStartY = this.shipCanvas.height/4*3 + imageRepository.spaceship.height*2;
+			var shipStartY = this.shipCanvas.height/4*3 + imageRepository.spaceship.height;
 			this.ship.init(shipStartX, shipStartY, imageRepository.spaceship.width,
 			               imageRepository.spaceship.height);
 
